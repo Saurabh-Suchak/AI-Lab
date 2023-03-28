@@ -35,10 +35,10 @@ def tic_tac_toe():
                 break
             if all(board[i][j] != " " for i in range(3) for j in range(3)):
                 print_board(board)
-                print("It's a tie!")
+                print("Result is tie")
                 break
             current_player = players[(players.index(current_player) + 1) % 2]
         else:
-            print("This position is already occupied. Try again.")
+            print("space filled")
 
 tic_tac_toe()
