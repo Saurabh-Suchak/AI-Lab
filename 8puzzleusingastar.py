@@ -1,0 +1,185 @@
+# class Node:
+#     def __init__(self,data,level,fval):
+    
+#         self.data = data
+#         self.level = level
+#         self.fval = fval
+
+#     def generate_child(self):
+#         x,y = self.find(self.data,'_')
+       
+#         val_list = [[x,y-1],[x,y+1],[x-1,y],[x+1,y]]
+#         children = []
+#         for i in val_list:
+#             child = self.shuffle(self.data,x,y,i[0],i[1])
+#             if child is not None:
+#                 child_node = Node(child,self.level+1,0)
+#                 children.append(child_node)
+#         return children
+        
+#     def shuffle(self,puz,x1,y1,x2,y2):
+     
+#         if x2 >= 0 and x2 < len(self.data) and y2 >= 0 and y2 < len(self.data):
+#             temp_puz = []
+#             temp_puz = self.copy(puz)
+#             temp = temp_puz[x2][y2]
+#             temp_puz[x2][y2] = temp_puz[x1][y1]
+#             temp_puz[x1][y1] = temp
+#             return temp_puz
+#         else:
+#             return None
+            
+
+#     def copy(self,root):
+#         temp = []
+#         for i in root:
+#             t = []
+#             for j in i:
+#                 t.append(j)
+#             temp.append(t)
+#         return temp    
+            
+#     def find(self,puz,x):
+#         for i in range(0,len(self.data)):
+#             for j in range(0,len(self.data)):
+#                 if puz[i][j] == x:
+#                     return i,j
+
+
+
+# class Puzzle:
+#     def __init__(self,size):
+#         self.n = size
+#         self.open = []
+#         self.closed = []
+
+#     def accept(self):
+#         puz = []
+#         for i in range(0,self.n):
+#             temp = input().split(" ")
+#             puz.append(temp)
+#         return puz
+
+#     def f(self,start,goal):
+#         return self.h(start.data,goal)+start.level
+
+#     def h(self,start,goal):
+#         temp = 0
+#         for i in range(0,self.n):
+#             for j in range(0,self.n):
+#                 if start[i][j] != goal[i][j] and start[i][j] != '_':
+#                     temp += 1
+#         return temp
+        
+
+#     def process(self):
+#         print("Enter the start state matrix as seperate rows with space seperated integers and _ as blank \n")
+#         start = self.accept()
+#         print("Enter the goal state matrix \n")        
+#         goal = self.accept()
+        
+
+#         start = Node(start,0,0)
+#         start.fval = self.f(start,goal)
+      
+#         self.open.append(start)
+#         print("\n\n")
+#         move=0
+#         while True:
+#             cur = self.open[0]
+#             print("")
+            
+            
+            
+#             print("  \n")
+            
+#             for i in cur.data:
+#                 for j in i:
+#                     print(j,end=" ")
+#                 print("")
+#             print (f"no. of moves - {move}")
+#             move=move+1
+            
+            
+#             if(self.h(cur.data,goal) == 0):
+#                 break
+#             for i in cur.generate_child():
+#                 i.fval = self.f(i,goal)
+#                 self.open.append(i)
+#             self.closed.append(cur)
+#             del self.open[0]
+
+#             self.open.sort(key = lambda x:x.fval,reverse=False)
+
+
+# puz = Puzzle(3)
+# puz.process()
+
+#appraoch 2
+
+import numpy as np
+import heapq
+goal_state = [[1, 2, 3], [4, 5, 6], [7, 8, 0]]
+
+def manhattan_distance(state):
+    distance = 0
+    for i in range(3):
+        for j in range(3):
+            if state[i][j] != 0:
+                x, y = divmod(state[i][j]-1, 3)
+                distance += abs(x-i) + abs(y-j)
+    return distance
+
+def solve_8_puzzle(initial_state):
+    class Node:
+        def __init__(self, state, parent=None, g=0):
+            self.state = state
+            self.parent = parent
+            self.g = g
+            self.h = manhattan_distance(state)
+            self.f = self.g + self.h
+        
+        def __lt__(self, other):
+            return self.f < other.f
+        
+    open_set = [Node(initial_state)]
+    closed_set = set()
+    
+    while open_set:
+        current_node = heapq.heappop(open_set)
+        
+        if current_node.state == goal_state:
+            path = []
+            while current_node:
+                path.append(current_node.state)
+                current_node = current_node.parent
+            path.reverse()
+            return path
+        
+        for i in range(3):
+            for j in range(3):
+                if current_node.state[i][j] == 0:
+                    for dx, dy in [(0, 1), (0, -1), (1, 0), (-1, 0)]:
+                        x, y = i+dx, j+dy
+                        if 0 <= x < 3 and 0 <= y < 3:
+                            child_state = [row[:] for row in current_node.state]
+                            child_state[i][j], child_state[x][y] = child_state[x][y], child_state[i][j]
+                            child_node = Node(child_state, current_node, current_node.g+1)
+                            if child_node not in closed_set:
+                                heapq.heappush(open_set, child_node)
+        
+        closed_set.add(current_node)
+    
+    return None
+
+initial_state = [[3, 2, 1], [6, 5, 4], [7, 0, 8]]
+
+path = solve_8_puzzle(initial_state)
+if path:
+    print("Solution found:")
+    for state in path:
+      state= np.array(state).reshape(3,3)
+
+      print(state)
+else:
+    print("No solution found!")
